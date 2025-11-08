@@ -1,4 +1,4 @@
-# Content Saver Extension
+# Content Saver Extension and ui dashboard with multiple functionality
 
 A powerful browser extension built with the MERN stack that helps you save, organize, and intelligently retrieve content using AI-powered categorization, semantic search, and RAG-based Q&A.
 
