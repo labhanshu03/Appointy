@@ -1,15 +1,76 @@
 # Content Saver Extension
 
-A powerful browser extension built with the MERN stack that helps you save and organize various types of content with AI-powered categorization and descriptions.
+A powerful browser extension built with the MERN stack that helps you save, organize, and intelligently retrieve content using AI-powered categorization, semantic search, and RAG-based Q&A.
+
+Easily capture, summarize, and query your digital content — all enhanced by Google Gemini’s multimodal intelligence.
 
 ## Features
 
-1. **Photo Capture** - Capture screenshots with automatic categorization (book, recipe, document, etc.)
-2. **Text Documents** - Save selected text with auto-generated titles and descriptions
-3. **Todo Items** - Create smart todos with AI-suggested priorities
-4. **Product Saving** - Auto-extract product information from e-commerce pages
-5. **Page Bookmarking** - Save pages with scroll position for later reading
-6. **YouTube Videos** - Save videos with metadata and AI-generated summaries
+1. **Photo Capture** -
+•	Capture screenshots directly from any webpage
+•	Automatic AI categorization (book, recipe, document, etc.)
+•	AI-generated captions and descriptions
+•	Embedding data stored for every image, enabling semantic search and RAG-based Q&A
+•	Example: “Show me the recipe screenshots I captured this week.”
+
+
+2. **Text Documents** -
+•	Save selected text directly from webpages
+•	Right-click → Content Saver → Save as Document
+•	AI generates title, summary, and category automatically
+•	Embeddings generated and stored for each document
+•	Supports semantic search and natural language Q&A (e.g., “Find my notes about React hooks”)
+•	Enables deep RAG-based querying across your stored text content
+
+
+3. **Todo Items**
+•	Quickly create todos from the extension popup
+•	AI automatically suggests titles, priorities, and tags
+•	Each todo entry includes semantic embeddings for contextual retrieval
+•	Example: “Find todos related to grocery shopping”
+•	Fully searchable and queryable through semantic search and RAG Q&A
+
+
+4. **Product Saving** -
+•	Save products directly from e-commerce pages (Amazon, eBay, etc.)
+•	AI extracts product details (name, price, description, image)
+•	Embedding vectors stored for semantic product search
+•	Ask queries like “Find gadgets similar to the smartwatch I saved.”
+
+5. **Page Bookmarking** -
+•	Save webpages with scroll position retained
+•	AI generates summaries, tags, and categories
+•	Embeddings saved for semantic and contextual search
+•	Example: “Find the AI research article I was reading last night.”
+•	Fully compatible with RAG-based Q&A across your reading list
+
+6. **YouTube Videos** -
+•	Save YouTube videos with complete metadata (title, channel, duration, etc.)
+•	AI generates summaries and insights from video content
+•	Embeddings generated for each video
+•	Enables semantic search and RAG-based querying (e.g., “Summarize the videos I saved about MERN stack tutorials”)
+
+7🔍 Semantic Search----------------------------------------------------------------->
+•	Perform natural language searches across all content types — text, images, todos, bookmarks, and videos
+•	Powered by vector embeddings and semantic similarity matching
+•	Understands contextual meaning, not just keywords
+•	Examples:
+o	“Find all recipes mentioning pasta”
+o	“Show my notes about JavaScript performance”
+o	“Locate videos related to AI startups”
+
+8💬 **RAG-Based Q&A (Retrieval-Augmented Generation **------------------------------------>
+•	Ask natural language questions across all your saved content
+•	Combines semantic retrieval + AI generation for intelligent, context-aware answers
+•	Example queries:
+o	“Summarize everything I’ve saved about neural networks.”
+o	“What did I learn about financial planning last week?”
+o	“List my todos and bookmarks related to web development.”
+•	Integrates directly with the dashboard — enabling conversational exploration of your content library
+•	Powered by Google Gemini 2.5 Flash for real-time, multimodal reasoning
+
+
+
 
 All content is analyzed by AI to generate meaningful titles, descriptions, and categorizations. The system uses Google Gemini for intelligent analysis with automatic fallback mechanisms for reliability. Data is stored in MongoDB with vector embeddings for semantic search.
 
