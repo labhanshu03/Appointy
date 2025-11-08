@@ -11,14 +11,17 @@ A powerful browser extension built with the MERN stack that helps you save and o
 5. **Page Bookmarking** - Save pages with scroll position for later reading
 6. **YouTube Videos** - Save videos with metadata and AI-generated summaries
 
-All content is analyzed by Claude AI to generate meaningful titles, descriptions, and categorizations. The data is stored in a MongoDB database optimized for future embedding-based semantic search.
+All content is analyzed by AI to generate meaningful titles, descriptions, and categorizations. The system uses Google Gemini for intelligent analysis with automatic fallback mechanisms for reliability. Data is stored in MongoDB with vector embeddings for semantic search.
 
 ## Tech Stack
 
 - **Frontend Extension**: Vanilla JavaScript (Chrome Extension Manifest V3)
 - **Backend**: Node.js, Express.js
-- **Database**: MongoDB
-- **AI**: Anthropic Claude API (Vision & Text)
+- **Database**: MongoDB with vector embeddings
+- **AI**:
+  - Google Gemini 2.5 Flash (text & vision analysis)
+  - Vector embeddings for semantic search
+  - RAG (Retrieval Augmented Generation) for Q&A
 - **Dashboard**: React.js
 
 ## Project Structure
@@ -89,11 +92,12 @@ cp .env.example .env
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/content-saver
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
+MONGODB_URI=mongodb+srv://labhgupta444_db_user:vCmvR9NQmlvh52y3@cluster0.rt2knnq.mongodb.net/appointy
+ANTHROPIC_API_KEY=sk-JkOY9l0DrdPBQL8EUJMA2g
+GEMINI_API_KEY=AIzaSyD2qREEcPvUJJmmvcRFLUa1KhEUvWAjD28
 ```
 
-**Important**: Replace `your_anthropic_api_key_here` with your actual Anthropic API key.
+
 
 5. Start the backend server:
 ```bash
