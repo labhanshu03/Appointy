@@ -311,31 +311,7 @@ The extension requires icon files. You can either:
 
 ## Future Enhancements
 
-### Embedding-Based Search
 
-The database schema is already prepared for embedding-based semantic search. To implement:
-
-1. Generate embeddings for content using Claude or another embedding model
-
-2. Store embeddings in the `embedding` field
-
-3. Use vector similarity search for more intelligent content retrieval
-
-Example implementation:
-
-```javascript
-// In aiService.js
-async generateEmbedding(text) {
-  // Use Claude or OpenAI to generate embeddings
-  // Store in content.embedding field
-}
-
-// In contentController.js
-async semanticSearch(queryEmbedding) {
-  // Use vector similarity to find related content
-  // Return most similar items
-}
-```
 
 ### Additional Features
 
