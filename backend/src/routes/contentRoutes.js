@@ -20,5 +20,9 @@ router.delete('/:id', contentController.deleteContent);
 
 // Search
 router.post('/search', contentController.searchContent);
+router.post('/semantic-search', contentController.semanticSearch);
+
+// Q&A with RAG
+router.post('/ask', contentController.answerQuestion);
 
 module.exports = router;

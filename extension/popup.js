@@ -50,22 +50,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+      if (!tab) {
+        showStatus('Error: Could not get active tab', 'error');
+        console.error('Tab is undefined');
+        return;
+      }
+
+      console.log('Active tab:', tab.url);
+
       chrome.tabs.sendMessage(tab.id, { action: 'extractProductInfo' }, (productInfo) => {
+        if (chrome.runtime.lastError) {
+          console.error('Content script error:', chrome.runtime.lastError);
+          showStatus('Error: Content script not loaded. Refresh the page.', 'error');
+          return;
+        }
+
         if (!productInfo) {
           showStatus('Could not extract product info', 'error');
           return;
         }
 
+        console.log('Extracted product info:', productInfo);
         showStatus('Analyzing product with AI...', 'info');
 
         chrome.runtime.sendMessage({
           action: 'saveProduct',
-          data: productInfo
+          data: productInfo,
+          tabUrl: productInfo.productUrl || tab.url
         }, (result) => {
-          if (result.success) {
+          if (chrome.runtime.lastError) {
+            console.error('Save error:', chrome.runtime.lastError);
+            showStatus('Error: ' + chrome.runtime.lastError.message, 'error');
+            return;
+          }
+
+          console.log('Save result:', result);
+
+          if (result && result.success) {
             showStatus(`Product saved: ${result.data.data.title}`, 'success');
           } else {
-            showStatus('Failed to save product', 'error');
+            const errorMsg = result?.error || result?.data?.message || 'Unknown error';
+            showStatus(`Failed: ${errorMsg}`, 'error');
+            console.error('Save failed:', result);
           }
         });
       });

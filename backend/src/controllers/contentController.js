@@ -1,5 +1,7 @@
 const Content = require('../models/Content');
 const aiService = require('../services/aiService');
+const embeddingService = require('../services/embeddingService');
+const ragService = require('../services/ragService');
 
 class ContentController {
   /**
@@ -23,6 +25,12 @@ class ContentController {
           extractedText: aiAnalysis.extractedText || null
         }
       });
+
+      // Generate embedding for semantic search
+      const searchableText = `${content.title} ${content.description} ${aiAnalysis.extractedText || ''} ${(aiAnalysis.tags || []).join(' ')}`;
+      const { embedding, model } = await embeddingService.generateEmbedding(searchableText);
+      content.embedding = embedding;
+      content.embeddingModel = model;
 
       await content.save();
 
@@ -64,6 +72,12 @@ class ContentController {
         }
       });
 
+      // Generate embedding for semantic search
+      const searchableText = `${content.title} ${content.description} ${textContent} ${(aiAnalysis.tags || []).join(' ')}`;
+      const { embedding, model } = await embeddingService.generateEmbedding(searchableText);
+      content.embedding = embedding;
+      content.embeddingModel = model;
+
       await content.save();
 
       res.status(201).json({
@@ -103,6 +117,12 @@ class ContentController {
           priority: 'medium'
         }
       });
+
+      // Generate embedding for semantic search
+      const searchableText = `${content.title} ${content.description} ${todoText}`;
+      const { embedding, model } = await embeddingService.generateEmbedding(searchableText);
+      content.embedding = embedding;
+      content.embeddingModel = model;
 
       await content.save();
 
@@ -148,6 +168,12 @@ class ContentController {
         }
       });
 
+      // Generate embedding for semantic search
+      const searchableText = `${content.title} ${content.description} ${aiAnalysis.productName} ${aiAnalysis.vendor || ''} ${(aiAnalysis.tags || []).join(' ')} ${pageContent}`;
+      const { embedding, model } = await embeddingService.generateEmbedding(searchableText);
+      content.embedding = embedding;
+      content.embeddingModel = model;
+
       await content.save();
 
       res.status(201).json({
@@ -189,6 +215,12 @@ class ContentController {
         }
       });
 
+      // Generate embedding for semantic search
+      const searchableText = `${content.title} ${content.description} ${pageTitle} ${metaDescription || ''} ${url} ${(aiAnalysis.tags || []).join(' ')}`;
+      const { embedding, model } = await embeddingService.generateEmbedding(searchableText);
+      content.embedding = embedding;
+      content.embeddingModel = model;
+
       await content.save();
 
       res.status(201).json({
@@ -229,6 +261,12 @@ class ContentController {
           duration: duration
         }
       });
+
+      // Generate embedding for semantic search
+      const searchableText = `${content.title} ${content.description} ${videoTitle} ${videoDescription || ''} ${channelName} ${(aiAnalysis.tags || []).join(' ')}`;
+      const { embedding, model } = await embeddingService.generateEmbedding(searchableText);
+      content.embedding = embedding;
+      content.embeddingModel = model;
 
       await content.save();
 
@@ -426,6 +464,128 @@ class ContentController {
       res.status(500).json({
         success: false,
         message: 'Failed to search content',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Semantic search using embeddings
+   * Allows natural language queries like "articles about AI agents I saved last month"
+   */
+  async semanticSearch(req, res) {
+    try {
+      const { query, limit = 20, contentType, dateFilter } = req.body;
+
+      console.log(`Semantic search query: "${query}"`);
+
+      // Generate embedding for the search query
+      const { embedding: queryEmbedding } = await embeddingService.generateEmbedding(query);
+
+      // Build filter for content type and date if provided
+      const filter = { embedding: { $exists: true, $ne: null } };
+
+      if (contentType) {
+        filter.contentType = contentType;
+      }
+
+      if (dateFilter) {
+        const now = new Date();
+        const pastDate = new Date();
+
+        switch(dateFilter) {
+          case 'today':
+            pastDate.setDate(now.getDate() - 1);
+            break;
+          case 'week':
+            pastDate.setDate(now.getDate() - 7);
+            break;
+          case 'month':
+            pastDate.setMonth(now.getMonth() - 1);
+            break;
+          case 'year':
+            pastDate.setFullYear(now.getFullYear() - 1);
+            break;
+        }
+
+        filter.timestamp = { $gte: pastDate };
+      }
+
+      // Get all content with embeddings that match the filter
+      const allContent = await Content.find(filter);
+
+      console.log(`Found ${allContent.length} items with embeddings`);
+
+      // Calculate similarity scores
+      const results = allContent.map(content => {
+        const similarity = embeddingService.cosineSimilarity(queryEmbedding, content.embedding);
+        return {
+          ...content.toObject(),
+          similarity: similarity
+        };
+      });
+
+      // Sort by similarity (highest first) and return top results
+      results.sort((a, b) => b.similarity - a.similarity);
+      const topResults = results.slice(0, limit);
+
+      console.log(`Returning ${topResults.length} results. Top similarity: ${topResults[0]?.similarity?.toFixed(4)}`);
+
+      res.status(200).json({
+        success: true,
+        data: topResults,
+        message: `Found ${topResults.length} results using semantic search`,
+        searchType: 'semantic'
+      });
+    } catch (error) {
+      console.error('Error in semantic search:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to perform semantic search',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Answer a question using RAG (Retrieval Augmented Generation)
+   * Example: "Who won the 2023 match?" - answers based on saved content
+   */
+  async answerQuestion(req, res) {
+    try {
+      const { question, contentType, dateFilter, limit } = req.body;
+
+      if (!question || !question.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Question is required'
+        });
+      }
+
+      console.log(`\n📨 Received Q&A request: "${question}"`);
+
+      // Use RAG service to answer the question
+      const result = await ragService.answerQuestion(question, {
+        contentType,
+        dateFilter,
+        limit: limit || 5
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          question: question,
+          answer: result.answer,
+          sources: result.sources,
+          confidence: result.confidence
+        },
+        message: 'Question answered using your saved content'
+      });
+    } catch (error) {
+      console.error('Error answering question:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to answer question',
         error: error.message
       });
     }

@@ -68,9 +68,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'saveProduct') {
-    saveProduct(request.data, sender.tab)
-      .then(result => sendResponse({ success: true, data: result }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
+    console.log('Background: Saving product', { data: request.data, tabUrl: request.tabUrl });
+
+    if (!request.tabUrl) {
+      console.error('Background: tabUrl is missing!');
+      sendResponse({ success: false, error: 'Product URL is missing' });
+      return true;
+    }
+
+    saveProduct(request.data, request.tabUrl)
+      .then(result => {
+        console.log('Background: Product saved successfully', result);
+        sendResponse({ success: true, data: result });
+      })
+      .catch(error => {
+        console.error('Background: Error saving product', error);
+        sendResponse({ success: false, error: error.message });
+      });
     return true;
   }
 
@@ -238,20 +252,33 @@ async function savePhoto(data) {
   return await response.json();
 }
 
-async function saveProduct(data, tab) {
+async function saveProduct(data, productUrl) {
+  console.log('saveProduct called with:', { data, productUrl });
+
+  if (!productUrl) {
+    throw new Error('Product URL is required');
+  }
+
+  const payload = {
+    pageContent: data.pageContent,
+    productUrl: productUrl,
+    imageUrl: data.imageUrl || ''
+  };
+
+  console.log('Sending to backend:', payload);
+
   const response = await fetch('http://localhost:5000/api/content/product', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      pageContent: data.pageContent,
-      productUrl: tab.url,
-      imageUrl: data.imageUrl
-    })
+    body: JSON.stringify(payload)
   });
 
-  return await response.json();
+  const result = await response.json();
+  console.log('Backend response:', result);
+
+  return result;
 }
 
 async function saveYouTube(data) {

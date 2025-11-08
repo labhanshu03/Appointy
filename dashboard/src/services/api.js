@@ -28,6 +28,28 @@ export const contentAPI = {
     return response.data;
   },
 
+  // Semantic search using natural language
+  semanticSearch: async (query, options = {}) => {
+    const response = await api.post('/content/semantic-search', {
+      query,
+      limit: options.limit || 20,
+      contentType: options.contentType,
+      dateFilter: options.dateFilter
+    });
+    return response.data;
+  },
+
+  // Ask a question and get an answer based on saved content (RAG)
+  askQuestion: async (question, options = {}) => {
+    const response = await api.post('/content/ask', {
+      question,
+      contentType: options.contentType,
+      dateFilter: options.dateFilter,
+      limit: options.limit || 5
+    });
+    return response.data;
+  },
+
   // Update content
   updateContent: async (id, updates) => {
     const response = await api.put(`/content/${id}`, updates);

@@ -35,30 +35,59 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function extractProductInfo() {
   let productInfo = {
     pageContent: '',
-    imageUrl: ''
+    imageUrl: '',
+    productUrl: window.location.href
   };
 
-  // Try to find product image
-  const productImage = document.querySelector('[data-testid="product-image"], .product-image, [itemprop="image"]');
+  // Try to find product image (with Flipkart support)
+  const productImage = document.querySelector(
+    '[data-testid="product-image"], .product-image, [itemprop="image"], ._2amPTt._2CVLQU, ._396cs4._2amPTt, img._2r_T1I, img._396cs4'
+  );
   if (productImage) {
-    productInfo.imageUrl = productImage.src || productImage.dataset.src;
+    productInfo.imageUrl = productImage.src || productImage.dataset.src || '';
   }
 
-  // Try to find product name
-  const productName = document.querySelector('h1, [itemprop="name"], .product-title, .product-name');
+  // Try to find product name (with Flipkart support)
+  const productName = document.querySelector(
+    'h1, [itemprop="name"], .product-title, .product-name, .B_NuCI, span.B_NuCI, ._35KyD6'
+  );
 
-  // Try to find product price
-  const productPrice = document.querySelector('[itemprop="price"], .price, .product-price');
+  // Try to find product price (with Flipkart support)
+  const productPrice = document.querySelector(
+    '[itemprop="price"], .price, .product-price, ._30jeq3._16Jk6d, ._30jeq3, div._30jeq3'
+  );
 
-  // Try to find product description
-  const productDescription = document.querySelector('[itemprop="description"], .product-description, .description');
+  // Try to find product description (with Flipkart support)
+  const productDescription = document.querySelector(
+    '[itemprop="description"], .product-description, .description, ._1mXcCf, div._1mXcCf'
+  );
 
-  // Compile page content
+  // Get additional text content for better analysis
+  let additionalInfo = '';
+  const features = document.querySelector('._3k-BhJ, .product-features, ul');
+  if (features) {
+    additionalInfo = features.textContent?.trim().substring(0, 500) || '';
+  }
+
+  // Compile page content with all available information
+  const nameText = productName?.textContent?.trim() || 'N/A';
+  const priceText = productPrice?.textContent?.trim() || 'N/A';
+  const descText = productDescription?.textContent?.trim().substring(0, 500) || additionalInfo || 'N/A';
+
   productInfo.pageContent = `
-    Product Name: ${productName?.textContent?.trim() || 'N/A'}
-    Price: ${productPrice?.textContent?.trim() || 'N/A'}
-    Description: ${productDescription?.textContent?.trim() || 'N/A'}
+    Product Name: ${nameText}
+    Price: ${priceText}
+    Description: ${descText}
+    URL: ${window.location.href}
   `;
+
+  // Log for debugging
+  console.log('Extracted product info:', {
+    name: nameText,
+    price: priceText,
+    hasDescription: descText !== 'N/A',
+    imageUrl: productInfo.imageUrl
+  });
 
   return productInfo;
 }

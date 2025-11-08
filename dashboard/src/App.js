@@ -14,6 +14,10 @@ function App() {
     search: ''
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [useSemanticSearch, setUseSemanticSearch] = useState(true);
+  const [useQA, setUseQA] = useState(false);
+  const [dateFilter, setDateFilter] = useState('');
+  const [qaAnswer, setQaAnswer] = useState(null);
 
   useEffect(() => {
     fetchContent();
@@ -46,17 +50,64 @@ function App() {
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       fetchContent();
+      setQaAnswer(null);
       return;
     }
 
     try {
       setLoading(true);
-      const response = await contentAPI.searchContent(searchQuery);
+      setQaAnswer(null);
 
-      if (response.success) {
-        setContents(response.data);
+      let response;
+
+      if (useQA) {
+        // Use Q&A mode - get an answer based on saved content
+        response = await contentAPI.askQuestion(searchQuery, {
+          contentType: filters.contentType,
+          dateFilter: dateFilter,
+          limit: 5
+        });
+
+        if (response.success) {
+          setQaAnswer(response.data);
+          // Also show the source documents
+          if (response.data.sources && response.data.sources.length > 0) {
+            const sourceIds = response.data.sources.map(s => s.id);
+            const allContent = await contentAPI.getAllContent();
+            if (allContent.success) {
+              const filteredContent = allContent.data.filter(c =>
+                sourceIds.includes(c._id)
+              );
+              setContents(filteredContent);
+            }
+          } else {
+            setContents([]);
+          }
+        } else {
+          setError('Failed to answer question');
+        }
+      } else if (useSemanticSearch) {
+        // Use semantic search with natural language understanding
+        response = await contentAPI.semanticSearch(searchQuery, {
+          contentType: filters.contentType,
+          dateFilter: dateFilter,
+          limit: 50
+        });
+
+        if (response.success) {
+          setContents(response.data);
+        } else {
+          setError('Search failed');
+        }
       } else {
-        setError('Search failed');
+        // Use traditional keyword search
+        response = await contentAPI.searchContent(searchQuery);
+
+        if (response.success) {
+          setContents(response.data);
+        } else {
+          setError('Search failed');
+        }
       }
     } catch (err) {
       setError('Error searching content');
@@ -155,15 +206,63 @@ function App() {
       </div>
 
       <div className="controls">
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search your content..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <button onClick={handleSearch}>Search</button>
+        <div className="search-section">
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder={useQA ? "Ask me anything... (e.g., 'Who won the 2023 match?')" : useSemanticSearch ? "Search naturally... (e.g., 'articles about AI I saved last month')" : "Search by keywords..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <button onClick={handleSearch} className="search-button">
+              {useQA ? '💬 Ask' : useSemanticSearch ? '🔍 AI Search' : '🔍 Search'}
+            </button>
+          </div>
+
+          <div className="search-options">
+            <label className="toggle-search">
+              <input
+                type="checkbox"
+                checked={useSemanticSearch}
+                onChange={(e) => {
+                  setUseSemanticSearch(e.target.checked);
+                  if (!e.target.checked) {
+                    setUseQA(false);
+                  }
+                }}
+              />
+              <span>Semantic Search</span>
+            </label>
+
+            <label className="toggle-search">
+              <input
+                type="checkbox"
+                checked={useQA}
+                onChange={(e) => {
+                  setUseQA(e.target.checked);
+                  if (e.target.checked) {
+                    setUseSemanticSearch(true);
+                  }
+                }}
+              />
+              <span>Q&A Mode (Get Answers)</span>
+            </label>
+
+            {(useSemanticSearch || useQA) && (
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="date-filter"
+              >
+                <option value="">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+            )}
+          </div>
         </div>
 
         <div className="filters">
@@ -198,6 +297,41 @@ function App() {
           </select>
         </div>
       </div>
+
+      {qaAnswer && (
+        <div className="qa-answer-section">
+          <div className="qa-answer-box">
+            <div className="qa-header">
+              <h3>💬 Answer</h3>
+              <span className={`confidence-badge confidence-${qaAnswer.confidence}`}>
+                {qaAnswer.confidence} confidence
+              </span>
+            </div>
+            <div className="qa-question">
+              <strong>Q:</strong> {qaAnswer.question}
+            </div>
+            <div className="qa-answer">
+              <strong>A:</strong> {qaAnswer.answer}
+            </div>
+            {qaAnswer.sources && qaAnswer.sources.length > 0 && (
+              <div className="qa-sources">
+                <strong>📚 Sources ({qaAnswer.sources.length}):</strong>
+                <ul>
+                  {qaAnswer.sources.map((source, index) => (
+                    <li key={source.id}>
+                      <span className="source-title">{source.title}</span>
+                      <span className="source-type">[{source.contentType}]</span>
+                      <span className="source-similarity">
+                        {(source.similarity * 100).toFixed(0)}% relevant
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <main className="content-grid">
         {loading && <div className="loading">Loading...</div>}
