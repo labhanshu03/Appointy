@@ -153,9 +153,9 @@ cp .env.example .env
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb+srv://labhgupta444_db_user:vCmvR9NQmlvh52y3@cluster0.rt2knnq.mongodb.net/appointy
+MONGODB_URI=MONGODB_URL
 ANTHROPIC_API_KEY=sk-JkOY9l0DrdPBQL8EUJMA2g
-GEMINI_API_KEY=AIzaSyD2qREEcPvUJJmmvcRFLUa1KhEUvWAjD28
+GEMINI_API_KEY=YOUR_GEMENI_API_KEY
 ```
 
 
