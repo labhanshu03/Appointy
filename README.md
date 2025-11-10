@@ -1,4 +1,4 @@
-# Content Saver Extension and ui dashboard with multiple functionality
+# Content Saver Extension and ui dashboard with multiple functionality( The gemini key i have used for rag and embedding has exceeded its limit. if checking in your system use your own gemini key)
 
 A powerful browser extension built with the MERN stack that helps you save, organize, and intelligently retrieve content using AI-powered categorization, semantic search, and RAG-based Q&A.
 
